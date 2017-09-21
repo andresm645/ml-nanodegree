@@ -63,26 +63,25 @@ class Vector(object):
         return sum(zipped_products)
 
     def angle_with(self, other, in_degrees = False):
-        #try:
-        u1 = self.normalized()
-        u2 = other.normalized()
-        dot_product = min(max(u1.dot(u2), -1), 1)
+        try:
+            u1 = self.normalized()
+            u2 = other.normalized()
+            dot_product = min(max(u1.dot(u2), -1), 1)
 
-        #pdb.set_trace()
-        angle_in_radians = acos(dot_product)
+            angle_in_radians = acos(dot_product)
 
-        if in_degrees:
-            degrees_per_radian = 180. / pi
-            return angle_in_radians * degrees_per_radian
+            if in_degrees:
+                degrees_per_radian = 180. / pi
+                return angle_in_radians * degrees_per_radian
 
-        else:
-            return angle_in_radians
+            else:
+                return angle_in_radians
 
-        #except Exception as e:
-        #    if str(e) == self.CANNOT_NORMALIZE_ZERO_VECTOR:
-        #        raise ValueError('Cannot compute an angle with the zero vector')
-        #    else:
-        #        raise e
+        except Exception as e:
+            if str(e) == self.CANNOT_NORMALIZE_ZERO_VECTOR:
+                raise ValueError('Cannot compute an angle with the zero vector')
+            else:
+                raise e
 
     def is_zero(self, tolerance=1e-10):
         return self.magnitude() < tolerance
@@ -105,5 +104,41 @@ class Vector(object):
         parallel_component = self.parallel_component_to(other)
         return self.minus(parallel_component)
 
+    def cross(self, other):
+        if self.dimension != 3 or other.dimension != 3:
+            raise ValueError('Vectors must have 3 dimensions to calculate cross product')
+
+        coor_1 = self.coordinates
+        coor_2 = other.coordinates
+        first = coor_1[1] * coor_2[2] - coor_2[1] * coor_1[2]
+        second = -1 * (coor_1[0] * coor_2[2] - coor_2[0] * coor_1[2])
+        third = coor_1[0] * coor_2[1] - coor_2[0] * coor_1[1]
+        return Vector([first, second, third])
+
+    def area_of_parallelogram_with(self, other):
+        return self.cross(other).magnitude()
+
+    def area_of_triangle_with(self, other):
+        return self.area_of_parallelogram_with(other) / 2.0
+        return self.area_of_parallelogram_with(other) / 2.0
 
 
+def main():
+    a = Vector([8.462, 7.893, -8.187])
+    b = Vector([6.984, -5.975, 4.778])
+    c = a.cross(b)
+    print 'Cross: ' + c.__str__()
+
+    a = Vector([-8.987, -9.838, 5.031])
+    b = Vector([-4.268, -1.861, -8.866])
+    c = a.area_of_parallelogram_with(b)
+    print 'Parallelogram: ' + c.__str__()
+
+    a = Vector([1.5, 9.547, 3.691])
+    b = Vector([-6.007, 0.124, 5.772])
+    c = a.area_of_triangle_with(b)
+    print 'Triangle: ' + c.__str__()
+
+
+if __name__ == "__main__":
+    main()
