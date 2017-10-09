@@ -28,6 +28,7 @@ class Vector(object):
     def __eq__(self, v):
         return self.coordinates == v.coordinates
 
+
     def plus(self, v):
         if self.dimension != other.dimension:
             raise ValueError('Vectors must have the same number of dimensions to be added')
@@ -87,7 +88,7 @@ class Vector(object):
         return self.magnitude() < tolerance
 
     def is_parallel_to(self, other):
-        return (self.is_zero() or 
+        return (self.is_zero() or
                 other.is_zero() or
                 self.angle_with(other) == 0 or
                 Decimal(self.angle_with(other)) == Decimal(pi))
