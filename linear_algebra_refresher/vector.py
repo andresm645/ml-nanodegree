@@ -1,8 +1,8 @@
 from math import sqrt, acos, pi
 from decimal import Decimal, getcontext
-import pdb
 
 getcontext().prec = 30
+
 
 class Vector(object):
     CANNOT_NORMALIZE_ZERO_VECTOR = 'Cannot normalize the zero vector'
@@ -20,27 +20,27 @@ class Vector(object):
         except TypeError:
             raise TypeError('The coordinates must be an iterable')
 
-
     def __str__(self):
         return 'Vector: {}'.format(self.coordinates)
-
 
     def __eq__(self, v):
         return self.coordinates == v.coordinates
 
+    def __getitem__(self, index):
+        return self.coordinates[index]
 
     def plus(self, v):
-        if self.dimension != other.dimension:
+        if self.dimension != v.dimension:
             raise ValueError('Vectors must have the same number of dimensions to be added')
 
-        new_coordinates = [x+y for x,y in zip(self.coordinates, other.coordinates)]
+        new_coordinates = [x + y for x, y in zip(self.coordinates, v.coordinates)]
         return Vector(new_coordinates)
 
     def minus(self, other):
         if self.dimension != other.dimension:
             raise ValueError('Vectors must have the same number of dimensions to be substracted')
 
-        new_coordinates = [x-y for x,y in zip(self.coordinates, other.coordinates)]
+        new_coordinates = [x - y for x, y in zip(self.coordinates, other.coordinates)]
         return Vector(new_coordinates)
 
     def times_scalar(self, c):
@@ -63,7 +63,7 @@ class Vector(object):
         zipped_products = [x * y for (x, y) in zip(self.coordinates, other.coordinates)]
         return sum(zipped_products)
 
-    def angle_with(self, other, in_degrees = False):
+    def angle_with(self, other, in_degrees=False):
         try:
             u1 = self.normalized()
             u2 = other.normalized()
