@@ -25,13 +25,18 @@ class LinearSystem(object):
             raise Exception(self.ALL_PLANES_MUST_BE_IN_SAME_DIM_MSG)
 
     def swap_rows(self, row1, row2):
-        pass  # add your code here
+        temp = self[row1]
+        self[row1] = self[row2]
+        self[row2] = temp
 
     def multiply_coefficient_and_row(self, coefficient, row):
-        pass  # add your code here
+        self[row] = Plane(self[row].normal_vector.times_scalar(coefficient), self[row].constant_term * coefficient)
 
     def add_multiple_times_row_to_row(self, coefficient, row_to_add, row_to_be_added_to):
-        pass  # add your code here
+        added_to = self[row_to_be_added_to]
+        add = self[row_to_add]
+        self[row_to_be_added_to] = Plane(added_to.normal_vector.plus(add.normal_vector.times_scalar(coefficient)),
+                                         added_to.constant_term + (add.constant_term * coefficient))
 
     def indices_of_first_nonzero_terms_in_each_row(self):
         num_equations = len(self)
@@ -81,14 +86,71 @@ p2 = Plane(normal_vector=Vector(['1', '1', '-1']), constant_term='3')
 p3 = Plane(normal_vector=Vector(['1', '0', '-2']), constant_term='2')
 
 s = LinearSystem([p0, p1, p2, p3])
+s.swap_rows(0, 1)
+if not (s[0] == p1 and s[1] == p0 and s[2] == p2 and s[3] == p3):
+    print 'test case 1 failed'
+else:
+    print 'test case 1 succeeded'
 
-print s.indices_of_first_nonzero_terms_in_each_row()
-print '{},{},{},{}'.format(s[0], s[1], s[2], s[3])
-print len(s)
-print s
+s.swap_rows(1, 3)
+if not (s[0] == p1 and s[1] == p3 and s[2] == p2 and s[3] == p0):
+    print 'test case 2 failed'
+else:
+    print 'test case 2 succeeded'
 
-s[0] = p1
-print s
+s.swap_rows(3, 1)
+if not (s[0] == p1 and s[1] == p0 and s[2] == p2 and s[3] == p3):
+    print 'test case 3 failed'
+else:
+    print 'test case 3 succeeded'
 
-print MyDecimal('1e-9').is_near_zero()
-print MyDecimal('1e-11').is_near_zero()
+s.multiply_coefficient_and_row(1, 0)
+if not (s[0] == p1 and s[1] == p0 and s[2] == p2 and s[3] == p3):
+    print 'test case 4 failed'
+else:
+    print 'test case 4 succeeded'
+
+s.multiply_coefficient_and_row(-1, 2)
+if not (s[0] == p1 and
+        s[1] == p0 and
+        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
+        s[3] == p3):
+    print 'test case 5 failed'
+else:
+    print 'test case 5 succeeded'
+
+s.multiply_coefficient_and_row(10, 1)
+if not (s[0] == p1 and
+        s[1] == Plane(normal_vector=Vector(['10', '10', '10']), constant_term='10') and
+        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
+        s[3] == p3):
+    print 'test case 6 failed'
+else:
+    print 'test case 6 succeeded'
+
+s.add_multiple_times_row_to_row(0, 0, 1)
+if not (s[0] == p1 and
+        s[1] == Plane(normal_vector=Vector(['10', '10', '10']), constant_term='10') and
+        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
+        s[3] == p3):
+    print 'test case 7 failed'
+else:
+    print 'test case 7 succeeded'
+
+s.add_multiple_times_row_to_row(1, 0, 1)
+if not (s[0] == p1 and
+        s[1] == Plane(normal_vector=Vector(['10', '11', '10']), constant_term='12') and
+        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
+        s[3] == p3):
+    print 'test case 8 failed'
+else:
+    print 'test case 8 succeeded'
+
+s.add_multiple_times_row_to_row(-1, 1, 0)
+if not (s[0] == Plane(normal_vector=Vector(['-10', '-10', '-10']), constant_term='-10') and
+        s[1] == Plane(normal_vector=Vector(['10', '11', '10']), constant_term='12') and
+        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
+        s[3] == p3):
+    print 'test case 9 failed'
+else:
+    print 'test case 9 succeeded'
