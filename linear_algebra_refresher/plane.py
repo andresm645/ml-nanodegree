@@ -106,6 +106,9 @@ class Plane(object):
 
         return connection.is_orthogonal_to(self.normal_vector)
 
+    def __getitem__(self, index):
+        return self.normal_vector[index]
+
     def is_parallel_to(self, other):
         n1 = self.normal_vector.normalized()
         n2 = other.normal_vector.normalized()
