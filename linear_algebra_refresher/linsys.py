@@ -61,26 +61,28 @@ class LinearSystem(object):
         current_index = 0
         dimensions = system[0].dimension
         for i in range(0, len(system), 1):
-            if system[i][current_index] == 0:           # If this row is unsuitable for triangular form
+            coefficient = MyDecimal(system[i][current_index])
+            if coefficient.is_near_zero():              # If this row is unsuitable for triangular form
                 for j in range(i+1, len(system), 1):    # Search the rows below for a non-zero index in this position
                     if system[j][current_index] != 0:
                         system.swap_rows(i, j)
                         break
-            system.clear_rows_below(current_index)
+            system.clear_rows_below(current_index, i)
             current_index += 1
             if current_index == dimensions:
                 break
 
         return system
 
-    def clear_rows_below(self, index):
-        for i in range(index + 1, len(self), 1):                            # For each row below the reference one
-            if self[i][index] != 0:                                         # Has to be cleared
-                reference_coefficient = self[index][index]
+    def clear_rows_below(self, index, row):
+        for i in range(row + 1, len(self), 1):                              # For each row below the reference one
+            coefficient = MyDecimal(self[i][index])
+            if not coefficient.is_near_zero():                              # Has to be cleared
+                reference_coefficient = self[row][index]
                 coefficient_to_clear = self[i][index]
                 factor = coefficient_to_clear / reference_coefficient * -1  # -1 to turn it into a substraction
 
-                self.add_multiple_times_row_to_row(factor, index, i)
+                self.add_multiple_times_row_to_row(factor, row, i)
 
     def __len__(self):
         return len(self.planes)
