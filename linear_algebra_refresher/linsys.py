@@ -1,4 +1,5 @@
 from decimal import Decimal, getcontext
+from copy import deepcopy
 
 from vector import Vector
 from plane import Plane
@@ -54,6 +55,33 @@ class LinearSystem(object):
 
         return indices
 
+    def compute_triangular_form(self):
+        system = deepcopy(self)
+
+        current_index = 0
+        dimensions = system[0].dimension
+        for i in range(0, len(system), 1):
+            if system[i][current_index] == 0:           # If this row is unsuitable for triangular form
+                for j in range(i+1, len(system), 1):    # Search the rows below for a non-zero index in this position
+                    if system[j][current_index] != 0:
+                        system.swap_rows(i, j)
+                        break
+            system.clear_rows_below(current_index)
+            current_index += 1
+            if current_index == dimensions:
+                break
+
+        return system
+
+    def clear_rows_below(self, index):
+        for i in range(index + 1, len(self), 1):                            # For each row below the reference one
+            if self[i][index] != 0:                                         # Has to be cleared
+                reference_coefficient = self[index][index]
+                coefficient_to_clear = self[i][index]
+                factor = coefficient_to_clear / reference_coefficient * -1  # -1 to turn it into a substraction
+
+                self.add_multiple_times_row_to_row(factor, index, i)
+
     def __len__(self):
         return len(self.planes)
 
@@ -80,77 +108,48 @@ class MyDecimal(Decimal):
         return abs(self) < eps
 
 
-p0 = Plane(normal_vector=Vector(['1', '1', '1']), constant_term='1')
-p1 = Plane(normal_vector=Vector(['0', '1', '0']), constant_term='2')
-p2 = Plane(normal_vector=Vector(['1', '1', '-1']), constant_term='3')
-p3 = Plane(normal_vector=Vector(['1', '0', '-2']), constant_term='2')
-
-s = LinearSystem([p0, p1, p2, p3])
-s.swap_rows(0, 1)
-if not (s[0] == p1 and s[1] == p0 and s[2] == p2 and s[3] == p3):
+p1 = Plane(normal_vector=Vector(['1', '1', '1']), constant_term='1')
+p2 = Plane(normal_vector=Vector(['0', '1', '1']), constant_term='2')
+s = LinearSystem([p1, p2])
+t = s.compute_triangular_form()
+if not (t[0] == p1 and
+        t[1] == p2):
     print 'test case 1 failed'
 else:
     print 'test case 1 succeeded'
 
-s.swap_rows(1, 3)
-if not (s[0] == p1 and s[1] == p3 and s[2] == p2 and s[3] == p0):
+p1 = Plane(normal_vector=Vector(['1', '1', '1']), constant_term='1')
+p2 = Plane(normal_vector=Vector(['1', '1', '1']), constant_term='2')
+s = LinearSystem([p1, p2])
+t = s.compute_triangular_form()
+if not (t[0] == p1 and
+        t[1] == Plane(constant_term='1')):
     print 'test case 2 failed'
 else:
     print 'test case 2 succeeded'
 
-s.swap_rows(3, 1)
-if not (s[0] == p1 and s[1] == p0 and s[2] == p2 and s[3] == p3):
+p1 = Plane(normal_vector=Vector(['1', '1', '1']), constant_term='1')
+p2 = Plane(normal_vector=Vector(['0', '1', '0']), constant_term='2')
+p3 = Plane(normal_vector=Vector(['1', '1', '-1']), constant_term='3')
+p4 = Plane(normal_vector=Vector(['1', '0', '-2']), constant_term='2')
+s = LinearSystem([p1, p2, p3, p4])
+t = s.compute_triangular_form()
+if not (t[0] == p1 and
+        t[1] == p2 and
+        t[2] == Plane(normal_vector=Vector(['0', '0', '-2']), constant_term='2') and
+        t[3] == Plane()):
     print 'test case 3 failed'
 else:
     print 'test case 3 succeeded'
 
-s.multiply_coefficient_and_row(1, 0)
-if not (s[0] == p1 and s[1] == p0 and s[2] == p2 and s[3] == p3):
+p1 = Plane(normal_vector=Vector(['0', '1', '1']), constant_term='1')
+p2 = Plane(normal_vector=Vector(['1', '-1', '1']), constant_term='2')
+p3 = Plane(normal_vector=Vector(['1', '2', '-5']), constant_term='3')
+s = LinearSystem([p1, p2, p3])
+t = s.compute_triangular_form()
+if not (t[0] == Plane(normal_vector=Vector(['1', '-1', '1']), constant_term='2') and
+        t[1] == Plane(normal_vector=Vector(['0', '1', '1']), constant_term='1') and
+        t[2] == Plane(normal_vector=Vector(['0', '0', '-9']), constant_term='-2')):
     print 'test case 4 failed'
 else:
     print 'test case 4 succeeded'
-
-s.multiply_coefficient_and_row(-1, 2)
-if not (s[0] == p1 and
-        s[1] == p0 and
-        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
-        s[3] == p3):
-    print 'test case 5 failed'
-else:
-    print 'test case 5 succeeded'
-
-s.multiply_coefficient_and_row(10, 1)
-if not (s[0] == p1 and
-        s[1] == Plane(normal_vector=Vector(['10', '10', '10']), constant_term='10') and
-        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
-        s[3] == p3):
-    print 'test case 6 failed'
-else:
-    print 'test case 6 succeeded'
-
-s.add_multiple_times_row_to_row(0, 0, 1)
-if not (s[0] == p1 and
-        s[1] == Plane(normal_vector=Vector(['10', '10', '10']), constant_term='10') and
-        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
-        s[3] == p3):
-    print 'test case 7 failed'
-else:
-    print 'test case 7 succeeded'
-
-s.add_multiple_times_row_to_row(1, 0, 1)
-if not (s[0] == p1 and
-        s[1] == Plane(normal_vector=Vector(['10', '11', '10']), constant_term='12') and
-        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
-        s[3] == p3):
-    print 'test case 8 failed'
-else:
-    print 'test case 8 succeeded'
-
-s.add_multiple_times_row_to_row(-1, 1, 0)
-if not (s[0] == Plane(normal_vector=Vector(['-10', '-10', '-10']), constant_term='-10') and
-        s[1] == Plane(normal_vector=Vector(['10', '11', '10']), constant_term='12') and
-        s[2] == Plane(normal_vector=Vector(['-1', '-1', '1']), constant_term='-3') and
-        s[3] == p3):
-    print 'test case 9 failed'
-else:
-    print 'test case 9 succeeded'
