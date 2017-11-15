@@ -159,6 +159,38 @@ class MyDecimal(Decimal):
         return abs(self) < eps
 
 
+class Parametrization(object):
+
+    BASEPT_AND_DIR_VECTORS_MUST_BE_IN_SAME_DIM = (
+        'The basepoint and direction vectors should all live in the same '
+        'dimension')
+
+    def __init__(self, basepoint, direction_vectors):
+
+        self.basepoint = basepoint
+        self.direction_vectors = direction_vectors
+        self.dimension = self.basepoint.dimension
+
+        try:
+            for v in direction_vectors:
+                assert v.dimension == self.dimension
+
+        except AssertionError:
+            raise Exception(self.BASEPT_AND_DIR_VECTORS_MUST_BE_IN_SAME_DIM)
+
+    def __str__(self):
+
+        output = ''
+        for coord in range(self.dimension):
+            output += 'x_{} = {} '.format(coord + 1,
+                                          round(self.basepoint[coord], 3))
+            for free_var, vector in enumerate(self.direction_vectors):
+                output += '+ {} t_{}'.format(round(vector[coord], 3),
+                                             free_var + 1)
+            output += '\n'
+        return output
+
+
 p1 = Plane(normal_vector=Vector([5.862, 1.178, -10.366]), constant_term=-8.15)
 p2 = Plane(normal_vector=Vector([-2.931, -0.589, 5.183]), constant_term=-4.075)
 s = LinearSystem([p1, p2])
