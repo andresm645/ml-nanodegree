@@ -129,9 +129,71 @@ class LinearSystem(object):
         if has_no_solution:
             return None
         elif valid_equations < dimensions:
-            return float("inf")
+            return self.parametrized_solve()
         else:
             return Vector(solution)
+
+    # Used only when system has infinite solutions, reproduces manual approach of solving the parametrization
+    # This method should be modularized into smaller components, but it's late and I want to sleep :D
+    def parametrized_solve(self):
+        rref = self.compute_rref()
+        total_dimensions = rref[0].dimension
+        intermediate_vectors = []
+        nonzeros = rref.indices_of_first_nonzero_terms_in_each_row()
+
+        # First I create a set of equations equal to the original ones but "solving" for the pivot variable
+        #   note: I only reproduce the right side of the equation in a Vector
+        #   e.g.
+        #   x + y +  z = 1   =>   x = 1 -  y -  z   => [1, -1, -1]
+        #       y - 2z = 2   =>   y = 2 + 0y + 2z   => [2, 0, 2]
+        for i in range(0, len(rref), 1):                        # For every equation
+            nonzero_for_eq = nonzeros[i]
+            if nonzero_for_eq != -1:                            # If it is a valid equation
+                int_vector = [rref[i].constant_term]            # Append the constant term at the start of our vector
+                for j in range(1, total_dimensions, 1):         # Skip x as x will never be a free variable
+                    if j != nonzero_for_eq:                     # Subtract the corresponding coefficient unless it is
+                                                                # the coefficient for the pivot variable being evaluated
+                        int_vector.append(rref[i][j] * -1)
+                    else:
+                        int_vector.append(0)                    # If it is the pivot variable then append a 0
+                intermediate_vectors.append(int_vector)
+
+        # Now I add equations for the free variables and "missing equations" (i.e. eqs in 0 = 0 form)
+        last_nonzero_index = -1
+        current_equation = 0
+        true_results = []
+        for i in range(0, len(nonzeros), 1):
+            if i < total_dimensions:
+                while nonzeros[i] > last_nonzero_index + 1:                 # There might be several missing pivots
+                    free_variable_vector = [0] * total_dimensions
+                    free_variable_vector[i] = 1
+                    true_results.append(free_variable_vector)
+                    last_nonzero_index += 1
+
+                if nonzeros[i] == -1:
+                    free_variable_vector = [0] * total_dimensions
+                    free_variable_vector[i] = 1
+                    true_results.append(free_variable_vector)
+                else:
+                    true_results.append(intermediate_vectors[current_equation])
+
+                current_equation += 1
+                last_nonzero_index = nonzeros[i]
+
+        # Create the "verticals" from the solution (grab all constants and
+        # coefficients for each variable in the same vector)
+        verticals = []
+        for i in range(0, total_dimensions, 1):
+            vertical = []
+            for j in range(0, len(true_results), 1):
+                value = 0
+                if not MyDecimal(true_results[j][i]).is_near_zero():
+                    value = true_results[j][i]
+                vertical.append(Decimal(value))
+            verticals.append(Vector(vertical))
+
+        # Construct final Parametrization object with the vectors we produced
+        return Parametrization(verticals[0], verticals[1:])
 
     def __len__(self):
         return len(self.planes)
@@ -191,26 +253,23 @@ class Parametrization(object):
         return output
 
 
-p1 = Plane(normal_vector=Vector([5.862, 1.178, -10.366]), constant_term=-8.15)
-p2 = Plane(normal_vector=Vector([-2.931, -0.589, 5.183]), constant_term=-4.075)
+p1 = Plane(normal_vector=Vector([0.786, 0.786, 0.588]), constant_term=-0.714)
+p2 = Plane(normal_vector=Vector([-0.131, -0.131, 0.244]), constant_term=0.319)
 s = LinearSystem([p1, p2])
-r = s.solve()
+r = s.parametrized_solve()
 print r
-
 
 p1 = Plane(normal_vector=Vector([8.631, 5.112, -1.816]), constant_term=-5.113)
 p2 = Plane(normal_vector=Vector([4.315, 11.132, -5.27]), constant_term=-6.775)
 p3 = Plane(normal_vector=Vector([-2.158, 3.01, -1.727]), constant_term=-0.831)
 s = LinearSystem([p1, p2, p3])
-r = s.solve()
+r = s.parametrized_solve()
 print r
 
-
-p1 = Plane(normal_vector=Vector([5.262, 2.739, -9.878]), constant_term=-3.441)
-p2 = Plane(normal_vector=Vector([5.111, 6.358, 7.638]), constant_term=-2.152)
-p3 = Plane(normal_vector=Vector([2.016, -9.924, -1.367]), constant_term=-9.278)
-p4 = Plane(normal_vector=Vector([2.167, -13.543, -18.883]), constant_term=-10.567)
+p1 = Plane(normal_vector=Vector([0.935, 1.76, -9.365]), constant_term=-9.955)
+p2 = Plane(normal_vector=Vector([0.187, 0.352, -1.873]), constant_term=-1.991)
+p3 = Plane(normal_vector=Vector([0.374, 0.704, -3.746]), constant_term=-3.982)
+p4 = Plane(normal_vector=Vector([-0.561, -1.056, 5.619]), constant_term=5.973)
 s = LinearSystem([p1, p2, p3, p4])
-r = s.solve()
+r = s.parametrized_solve()
 print r
-
